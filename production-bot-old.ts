@@ -145,8 +145,13 @@ async function runBot() {
     process.exit(1);
   }
 
-  // Initialize SDK
-  const sdk = new PolymarketSDK({ privateKey });
+  // Initialize SDK with proxy wallet configuration
+  const funderAddress = process.env.FUNDER_ADDRESS;
+  const sdk = new PolymarketSDK({
+    privateKey,
+    signatureType: funderAddress ? 1 : undefined, // POLY_PROXY if funder specified
+    funder: funderAddress, // Your proxy wallet address (optional)
+  });
 
   // Check initial balance
   try {

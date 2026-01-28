@@ -74,6 +74,10 @@ export interface TradingServiceConfig {
   chainId?: number;
   /** Pre-generated API credentials (optional) */
   credentials?: ApiCredentials;
+  /** Signature type (0 = EOA, 1 = POLY_PROXY, 2 = EIP1271) */
+  signatureType?: number;
+  /** Funder address (for proxy wallets, this is where funds are held) */
+  funder?: string;
 }
 
 // Order types
@@ -164,6 +168,8 @@ export class TradingService {
   private initialized = false;
   private tickSizeCache: Map<string, string> = new Map();
   private negRiskCache: Map<string, boolean> = new Map();
+  private signatureType?: number;
+  private funder?: string;
 
   constructor(
     private rateLimiter: RateLimiter,
@@ -173,6 +179,8 @@ export class TradingService {
     this.wallet = new Wallet(config.privateKey);
     this.chainId = (config.chainId || POLYGON_MAINNET) as Chain;
     this.credentials = config.credentials || null;
+    this.signatureType = config.signatureType;
+    this.funder = config.funder;
   }
 
   // ============================================================================
@@ -206,7 +214,9 @@ export class TradingService {
         key: this.credentials.key,
         secret: this.credentials.secret,
         passphrase: this.credentials.passphrase,
-      }
+      },
+      this.signatureType,
+      this.funder
     );
 
     this.initialized = true;

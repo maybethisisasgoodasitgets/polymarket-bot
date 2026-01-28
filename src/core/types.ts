@@ -119,6 +119,20 @@ export interface PolySDKOptions {
     secret: string;
     passphrase: string;
   };
+
+  /**
+   * Signature type for trading operations
+   * - 0: EOA (standard wallet)
+   * - 1: POLY_PROXY (Magic Link, email wallets)
+   * - 2: EIP1271 (smart contract wallets)
+   */
+  signatureType?: number;
+
+  /**
+   * Funder address (for proxy wallets where funds are held separately)
+   * This is the address shown on polymarket.com/settings
+   */
+  funder?: string;
 }
 
 // K-Line interval types
