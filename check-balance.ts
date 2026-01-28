@@ -20,7 +20,7 @@ async function main() {
   await sdk.tradingService.initialize();
 
   // Check wallet USDC balance on Polygon
-  const provider = new ethers.JsonRpcProvider('https://polygon-rpc.com');
+  const provider = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com');
   const wallet = new ethers.Wallet(privateKey, provider);
   const usdcContract = new ethers.Contract(
     '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', // USDC on Polygon
@@ -28,7 +28,7 @@ async function main() {
     provider
   );
   const walletBalance = await usdcContract.balanceOf(wallet.address);
-  const walletUSDC = parseFloat(ethers.formatUnits(walletBalance, 6));
+  const walletUSDC = parseFloat(ethers.utils.formatUnits(walletBalance, 6));
 
   // Check Polymarket CLOB balance
   const clobBalance = await sdk.tradingService.getBalanceAllowance('COLLATERAL');
