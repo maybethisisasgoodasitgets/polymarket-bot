@@ -150,7 +150,7 @@ async function runBot() {
 
   // Check initial balance
   try {
-    const wallet = sdk.wallet;
+    const wallet = sdk.tradingService;
     await wallet.initialize();
     
     const balances = await wallet.getBalances();
@@ -302,7 +302,7 @@ async function runBot() {
 
   setInterval(async () => {
     try {
-      const balances = await sdk.wallet.getBalances();
+      const balances = await sdk.tradingService.getBalances();
       stats.currentBalance = balances.usdc;
       
       const runtime = Math.floor((Date.now() - stats.startTime) / 1000 / 60); // minutes
