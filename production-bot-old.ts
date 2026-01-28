@@ -159,7 +159,7 @@ async function runBot() {
     await wallet.initialize();
     
     const balances = await wallet.getBalanceAllowance('COLLATERAL');
-    const usdcBalance = parseFloat(balances.balance);
+    const usdcBalance = parseFloat(balances.balance) / 1e6; // USDC has 6 decimals
     
     if (stats.startBalance === 0) {
       stats.startBalance = usdcBalance;
@@ -308,7 +308,7 @@ async function runBot() {
   setInterval(async () => {
     try {
       const balances = await sdk.tradingService.getBalanceAllowance('COLLATERAL');
-      stats.currentBalance = parseFloat(balances.balance);
+      stats.currentBalance = parseFloat(balances.balance) / 1e6; // USDC has 6 decimals
       
       const runtime = Math.floor((Date.now() - stats.startTime) / 1000 / 60); // minutes
       const hourlyRate = stats.netProfit / (runtime / 60);
