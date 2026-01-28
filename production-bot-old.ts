@@ -153,8 +153,8 @@ async function runBot() {
     const wallet = sdk.tradingService;
     await wallet.initialize();
     
-    const balances = await wallet.getBalances();
-    const usdcBalance = balances.usdc;
+    const balances = await wallet.getBalanceAllowance('COLLATERAL');
+    const usdcBalance = parseFloat(balances.balance);
     
     if (stats.startBalance === 0) {
       stats.startBalance = usdcBalance;
@@ -162,7 +162,7 @@ async function runBot() {
     stats.currentBalance = usdcBalance;
     
     log('info', '💰 Wallet Status', {
-      address: wallet.getAddress(),
+      address: await wallet.getAddress(),
       usdc: `$${usdcBalance.toFixed(2)}`,
       netProfit: `$${stats.netProfit.toFixed(2)}`,
       roi: stats.startBalance > 0 ? `${((stats.netProfit / stats.startBalance) * 100).toFixed(2)}%` : '0%',
@@ -302,15 +302,15 @@ async function runBot() {
 
   setInterval(async () => {
     try {
-      const balances = await sdk.tradingService.getBalances();
-      stats.currentBalance = balances.usdc;
+      const balances = await sdk.tradingService.getBalanceAllowance('COLLATERAL');
+      stats.currentBalance = parseFloat(balances.balance);
       
       const runtime = Math.floor((Date.now() - stats.startTime) / 1000 / 60); // minutes
       const hourlyRate = stats.netProfit / (runtime / 60);
       const dailyProjection = hourlyRate * 24;
       
       log('info', `📊 Status Update (${runtime}min runtime)`, {
-        balance: `$${balances.usdc.toFixed(2)}`,
+        balance: `$${stats.currentBalance.toFixed(2)}`,
         netProfit: `$${stats.netProfit.toFixed(2)}`,
         trades: `${stats.successfulTrades}/${stats.totalTrades}`,
         winRate: stats.totalTrades > 0 ? `${((stats.successfulTrades / stats.totalTrades) * 100).toFixed(1)}%` : '0%',
