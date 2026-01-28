@@ -110,6 +110,32 @@ function saveStats(stats: Stats) {
 }
 
 // ============================================================================
+// Telegram Notifications
+// ============================================================================
+
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+async function sendTelegram(message: string) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
+  
+  try {
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    });
+  } catch (error) {
+    // Silently fail - don't crash bot if Telegram is down
+  }
+}
+
+// ============================================================================
 // Logging
 // ============================================================================
 
@@ -172,6 +198,15 @@ async function runBot() {
       netProfit: `$${stats.netProfit.toFixed(2)}`,
       roi: stats.startBalance > 0 ? `${((stats.netProfit / stats.startBalance) * 100).toFixed(2)}%` : '0%',
     });
+  
+  // Send Telegram notification on bot start
+  await sendTelegram(
+    `🤖 <b>Bot Started</b>\n\n` +
+    `💰 Balance: $${usdcBalance.toFixed(2)}\n` +
+    `📊 Net Profit: $${stats.netProfit.toFixed(2)}\n` +
+    `📈 ROI: ${stats.startBalance > 0 ? ((stats.netProfit / stats.startBalance) * 100).toFixed(2) : '0'}%\n` +
+    `🔄 Session: ${stats.restarts}`
+  );
 
     if (usdcBalance < CONFIG.minBalance) {
       log('error', `Insufficient balance. Need at least $${CONFIG.minBalance}`, {
@@ -214,6 +249,12 @@ async function runBot() {
         price: signal.currentPrice.toFixed(4),
         estimatedProfit: `${(signal.estimatedProfitRate * 100).toFixed(1)}%`,
       });
+      sendTelegram(
+        `🎯 <b>DIP DETECTED</b>\n\n` +
+        `💹 ${signal.coin} - ${signal.dipSide} dropped ${(signal.dropPercent * 100).toFixed(1)}%\n` +
+        `💵 Price: ${signal.currentPrice.toFixed(4)}\n` +
+        `📊 Est. Profit: ${(signal.estimatedProfitRate * 100).toFixed(1)}%`
+      );
     } else if (signal.type === 'leg2') {
       log('info', `🔄 LEG2 READY: Building hedge position`, {
         totalCost: signal.totalCost?.toFixed(4),
@@ -252,6 +293,13 @@ async function runBot() {
         netProfit: `$${stats.netProfit.toFixed(2)}`,
         winRate: `${((stats.successfulTrades / stats.totalTrades) * 100).toFixed(1)}%`,
       });
+      
+      sendTelegram(
+        `🎉 <b>PROFIT!</b> +$${profit.toFixed(2)} (${profitPercent.toFixed(1)}%)\n\n` +
+        `💰 Total Profit: $${stats.totalProfit.toFixed(2)}\n` +
+        `📊 Net Profit: $${stats.netProfit.toFixed(2)}\n` +
+        `📈 Win Rate: ${((stats.successfulTrades / stats.totalTrades) * 100).toFixed(1)}%`
+      );
     } else {
       const loss = Math.abs(profit);
       stats.totalLoss += loss;
@@ -262,6 +310,12 @@ async function runBot() {
         reason: result.status,
         netProfit: `$${stats.netProfit.toFixed(2)}`,
       });
+      
+      sendTelegram(
+        `📉 <b>Loss</b> -$${loss.toFixed(2)}\n\n` +
+        `⚠️ Reason: ${result.status}\n` +
+        `📊 Net Profit: $${stats.netProfit.toFixed(2)}`
+      );
     }
     
     saveStats(stats);
