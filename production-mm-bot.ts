@@ -214,9 +214,37 @@ async function updateMarketOrders(sdk: PolymarketSDK, market: any) {
       noBalance: 0,
     });
 
-    // TODO: Place actual orders here
-    // For now, we're just monitoring and learning the markets
-    log('info', `✅ Would place: BUY ${shares.toFixed(1)} shares @ $${ourBuyPrice.toFixed(3)}, SELL @ $${ourSellPrice.toFixed(3)}`);
+    try {
+      // Place buy order (providing liquidity to buyers)
+      const buyOrder = await sdk.tradingService.createLimitOrder({
+        tokenId: yesTokenId,
+        side: 'BUY',
+        price: ourBuyPrice,
+        size: shares,
+      });
+
+      log('success', `✅ Placed BUY order: ${shares.toFixed(1)} shares @ $${ourBuyPrice.toFixed(3)}`);
+
+      // Place sell order (providing liquidity to sellers)
+      const sellOrder = await sdk.tradingService.createLimitOrder({
+        tokenId: yesTokenId,
+        side: 'SELL',
+        price: ourSellPrice,
+        size: shares,
+      });
+
+      log('success', `✅ Placed SELL order: ${shares.toFixed(1)} shares @ $${ourSellPrice.toFixed(3)}`);
+
+      await sendTelegram(
+        `📝 <b>Orders Placed</b>\n\n` +
+        `📊 ${market.question.substring(0, 80)}\n` +
+        `💰 BUY @ $${ourBuyPrice.toFixed(3)} | SELL @ $${ourSellPrice.toFixed(3)}\n` +
+        `📈 Spread: ${(CONFIG.spreadTarget * 100).toFixed(1)}%`
+      );
+
+    } catch (error: any) {
+      log('error', `Failed to place orders: ${error.message}`);
+    }
 
   } catch (error: any) {
     log('error', `Error updating market ${market.question}: ${error.message}`);
