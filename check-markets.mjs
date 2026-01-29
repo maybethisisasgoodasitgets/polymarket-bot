@@ -1,7 +1,7 @@
 import { PolymarketSDK } from './src/index.js';
 
 const sdk = await PolymarketSDK.create();
-const markets = await sdk.gammaApi.searchMarkets({ closed: false });
+const markets = await sdk.gammaApi.getMarkets({ closed: false });
 
 const cryptoMarkets = markets.filter(m => 
   m.question?.includes('15-minute') && 
